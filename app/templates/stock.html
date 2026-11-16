@@ -2,6 +2,17 @@
 {% block content %}
 <h1 class="h4 mb-3">Остатки</h1>
 
+{% if reconcile_ok %}
+<div class="alert alert-success py-2">
+  Сверка журнала и остатков: <strong>сходится</strong> по всем артикулам
+</div>
+{% else %}
+<div class="alert alert-danger py-2">
+  <strong>Расхождение!</strong> Сумма движений не совпадает с остатками —
+  <a href="/api/reconcile" class="alert-link">подробности</a>
+</div>
+{% endif %}
+
 <table class="table table-striped bg-white align-middle">
   <thead class="table-dark">
     <tr>

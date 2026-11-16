@@ -18,3 +18,17 @@ class StockRow(BaseModel):
     physical: int
     reserved_fbs: int
     available: int
+
+
+class ReconcileItem(BaseModel):
+    sku: str
+    ledger_qty: int
+    balance_qty: int
+    ledger_reserved: int
+    balance_reserved: int
+    ok: bool
+
+
+class ReconcileResponse(BaseModel):
+    ok: bool
+    items: list[ReconcileItem]

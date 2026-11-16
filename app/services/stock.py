@@ -358,3 +358,51 @@ def stock_total(db: Session, product_id: int) -> int:
         select(func.coalesce(func.sum(Balance.physical), 0))
         .where(Balance.product_id == product_id)
     ).scalar_one()
+
+
+def reconcile(db: Session) -> list[dict]:
+    """Сверка: сумма проводок журнала против остатков в balances."""
+    ledger_sq = (
+        select(
+            Ledger.product_id.label("product_id"),
+            func.coalesce(func.sum(Ledger.qty_delta), 0).label("qty"),
+            func.coalesce(func.sum(Ledger.reserve_delta), 0).label("reserved"),
+        )
+        .group_by(Ledger.product_id)
+        .subquery()
+    )
+    balance_sq = (
+        select(
+            Balance.product_id.label("product_id"),
+            func.coalesce(func.sum(Balance.physical), 0).label("physical"),
+            func.coalesce(func.sum(Balance.reserved_fbs), 0).label("reserved"),
+        )
+        .group_by(Balance.product_id)
+        .subquery()
+    )
+
+    rows = db.execute(
+        select(
+            Product.sku,
+            func.coalesce(ledger_sq.c.qty, 0).label("ledger_qty"),
+            func.coalesce(balance_sq.c.physical, 0).label("balance_qty"),
+            func.coalesce(ledger_sq.c.reserved, 0).label("ledger_reserved"),
+            func.coalesce(balance_sq.c.reserved, 0).label("balance_reserved"),
+        )
+        .outerjoin(ledger_sq, ledger_sq.c.product_id == Product.id)
+        .outerjoin(balance_sq, balance_sq.c.product_id == Product.id)
+        .order_by(Product.sku)
+    ).all()
+
+    return [
+        {
+            "sku": r.sku,
+            "ledger_qty": int(r.ledger_qty),
+            "balance_qty": int(r.balance_qty),
+            "ledger_reserved": int(r.ledger_reserved),
+            "balance_reserved": int(r.balance_reserved),
+            "ok": int(r.ledger_qty) == int(r.balance_qty)
+            and int(r.ledger_reserved) == int(r.balance_reserved),
+        }
+        for r in rows
+    ]

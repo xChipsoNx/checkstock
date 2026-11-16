@@ -45,9 +45,12 @@ def index():
 @router.get("/stock")
 def stock_page(request: Request, db: Session = Depends(get_db)):
     rows = stock.stock_table(db)
+    reconcile = stock.reconcile(db)
     return templates.TemplateResponse(request, "stock.html", {
         "stock_rows": [r for r in rows if r.type == "WAREHOUSE"],
         "transit_rows": [r for r in rows if r.type.startswith("TRANSIT")],
+        "reconcile_ok": all(i["ok"] for i in reconcile),
+        "reconcile_items": reconcile,
         "new_key": uuid4().hex,
         **refs(db),
     })
