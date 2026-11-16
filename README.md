@@ -100,11 +100,17 @@ FROM products p ORDER BY p.sku;
 ## Тесты
 
 ```bash
-python -m pytest
+docker compose exec app python -m pytest
 ```
 
-Шесть тестов на отдельной базе `checkstock_test`: приход, резерв, отгрузка,
-нехватка, идемпотентность и сверка журнала с балансами.
+Тестовая база `checkstock_test` создаётся автоматически, тесты работают в
+изолированных транзакциях и не затрагивают данные приложения.
+
+Альтернатива — локально, при запущенном PostgreSQL на `localhost:5432`:
+
+```bash
+python -m pytest
+```
 
 ## Локальный запуск без Docker
 

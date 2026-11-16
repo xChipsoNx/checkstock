@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+import psycopg
 import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.engine import make_url
@@ -12,9 +13,26 @@ from app.models import Base, Location, Product
 TEST_URL = make_url(settings.database_url).set(database="checkstock_test")
 
 
+def _ensure_test_database() -> None:
+    """Создаёт checkstock_test, если её ещё нет."""
+    admin = TEST_URL.set(database="postgres")
+    dsn = admin.render_as_string(hide_password=False).replace(
+        "postgresql+psycopg://", "postgresql://"
+    )
+    with psycopg.connect(dsn, connect_timeout=5, autocommit=True) as conn:
+        exists = conn.execute(
+            "SELECT 1 FROM pg_database WHERE datname = %s", (TEST_URL.database,)
+        ).fetchone()
+        if not exists:
+            conn.execute(f'CREATE DATABASE "{TEST_URL.database}"')
+
+
 @pytest.fixture(scope="session")
 def engine():
-    eng = create_engine(TEST_URL, pool_pre_ping=True)
+    _ensure_test_database()
+    eng = create_engine(
+        TEST_URL, pool_pre_ping=True, connect_args={"connect_timeout": 5}
+    )
     with eng.begin() as conn:
         Base.metadata.drop_all(conn)
         Base.metadata.create_all(conn)
