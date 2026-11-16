@@ -17,7 +17,7 @@ def idempotency_key(
     if not key:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="РџРµСЂРµРґР°Р№С‚Рµ Р·Р°РіРѕР»РѕРІРѕРє Idempotency-Key вЂ” РѕРЅ Р·Р°С‰РёС‰Р°РµС‚ РѕС‚ РґРІРѕР№РЅРѕРіРѕ СЃРїРёСЃР°РЅРёСЏ",
+            detail="Передайте заголовок Idempotency-Key — он защищает от двойного списания",
         )
     return key
 
