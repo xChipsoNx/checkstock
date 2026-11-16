@@ -82,6 +82,11 @@
           <input type="hidden" name="key" value="{{ new_key }}-recv-{{ t.id }}">
           <button class="btn btn-sm btn-outline-success">Принять</button>
         </form>
+        {% else %}
+        <form method="post" action="/actions/transfer/{{ t.id }}/receive">
+          <input type="hidden" name="key" value="{{ new_key }}-recv-retry-{{ t.id }}">
+          <button class="btn btn-sm btn-outline-secondary">Повторить приёмку</button>
+        </form>
         {% endif %}
       </td>
     </tr>
