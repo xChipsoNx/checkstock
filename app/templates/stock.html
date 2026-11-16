@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Остатки</h1>
+
+<table class="table table-striped bg-white align-middle">
+  <thead class="table-dark">
+    <tr>
+      <th>SKU</th><th>Склад</th>
+      <th class="text-end">Физически</th>
+      <th class="text-end">Резерв FBS</th>
+      <th class="text-end">Доступно</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in stock_rows %}
+    <tr>
+      <td>{{ r.sku }}</td>
+      <td>{{ r.name }}</td>
+      <td class="text-end">{{ r.physical }}</td>
+      <td class="text-end">{{ r.reserved_fbs }}</td>
+      <td class="text-end fw-bold">{{ r.available }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2 class="h5 mt-4 mb-3">В пути</h2>
+<table class="table table-bordered bg-white">
+  <thead><tr><th>SKU</th><th>Локация</th><th class="text-end">Количество</th></tr></thead>
+  <tbody>
+    {% for r in transit_rows %}
+    <tr>
+      <td>{{ r.sku }}</td>
+      <td>{{ r.name }}</td>
+      <td class="text-end">{{ r.physical }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="card mt-4">
+  <div class="card-body">
+    <h2 class="h6 mb-3">Резерв под заказ FBS</h2>
+    <form method="post" action="/actions/reserve" class="row g-2">
+      <input type="hidden" name="key" value="{{ new_key }}">
+      <div class="col-md-4">
+        <select name="product_id" class="form-select" required>
+          <option value="" selected disabled>Товар</option>
+          {% for p in products %}<option value="{{ p.id }}">{{ p.sku }} — {{ p.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select name="location_id" class="form-select" required>
+          <option value="" selected disabled>Склад</option>
+          {% for l in warehouse_refs %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <input type="number" min="1" name="qty" class="form-control" placeholder="Кол-во" required>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary w-100">Зарезервировать</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

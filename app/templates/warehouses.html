@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Склады</h1>
+
+<form method="post" action="/actions/warehouse" class="row g-2 mb-4">
+  <div class="col-md-4">
+    <input name="name" class="form-control" placeholder="Название склада" required>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-success">Добавить</button>
+  </div>
+</form>
+
+<table class="table bg-white align-middle">
+  <thead class="table-dark">
+    <tr><th>#</th><th>Название</th><th>Тип</th><th>Статус</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for l in locations %}
+    <tr class="{{ 'table-secondary' if l.is_deleted }}">
+      <td>{{ l.id }}</td>
+      <td>
+        <form method="post" action="/actions/warehouse/{{ l.id }}/rename" class="d-flex gap-1">
+          <input name="name" value="{{ l.name }}" class="form-control form-control-sm"
+                 {% if l.is_deleted %}disabled{% endif %}>
+          <button class="btn btn-sm btn-outline-secondary"
+                  {% if l.is_deleted %}disabled{% endif %}>Переименовать</button>
+        </form>
+      </td>
+      <td>{{ l.type }}</td>
+      <td>{{ "В архиве" if l.is_deleted else "Активен" }}</td>
+      <td>
+        {% if not l.is_deleted %}
+        <form method="post" action="/actions/warehouse/{{ l.id }}/delete"
+              onsubmit="return confirm('Удалить склад? Остатки и история сохранятся.')">
+          <button class="btn btn-sm btn-outline-danger">Удалить</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Движения</h1>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 mb-3">Приход</h2>
+      <form method="post" action="/actions/income" class="vstack gap-2">
+        <input type="hidden" name="key" value="{{ new_key }}-income">
+        <select name="product_id" class="form-select" required>
+          {% for p in products %}<option value="{{ p.id }}">{{ p.sku }}</option>{% endfor %}
+        </select>
+        <select name="location_id" class="form-select" required>
+          {% for l in warehouse_refs %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
+        </select>
+        <input type="number" min="1" name="qty" class="form-control" placeholder="Количество" required>
+        <button class="btn btn-success">Оприходовать</button>
+      </form>
+    </div></div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 mb-3">Перемещение между ФФ</h2>
+      <form method="post" action="/actions/transfer" class="vstack gap-2">
+        <input type="hidden" name="key" value="{{ new_key }}-transfer">
+        <select name="product_id" class="form-select" required>
+          {% for p in products %}<option value="{{ p.id }}">{{ p.sku }}</option>{% endfor %}
+        </select>
+        <select name="from_id" class="form-select" required>
+          {% for l in warehouse_refs %}<option value="{{ l.id }}">из {{ l.name }}</option>{% endfor %}
+        </select>
+        <select name="to_id" class="form-select" required>
+          {% for l in warehouse_refs %}<option value="{{ l.id }}">в {{ l.name }}</option>{% endfor %}
+        </select>
+        <input type="number" min="1" name="qty" class="form-control" placeholder="Количество" required>
+        <button class="btn btn-warning">Отправить</button>
+      </form>
+    </div></div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 mb-3">Отгрузка FBS</h2>
+      <form method="post" action="/actions/ship" class="vstack gap-2">
+        <input type="hidden" name="key" value="{{ new_key }}-ship">
+        <select name="product_id" class="form-select" required>
+          {% for p in products %}<option value="{{ p.id }}">{{ p.sku }}</option>{% endfor %}
+        </select>
+        <select name="location_id" class="form-select" required>
+          {% for l in warehouse_refs %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
+        </select>
+        <input type="number" min="1" name="qty" class="form-control" placeholder="Количество" required>
+        <button class="btn btn-primary">Отгрузить</button>
+        <p class="text-muted small mb-0">Отгрузить можно только зарезервированный товар. Сначала оформите резерв на странице «Остатки».</p>
+      </form>
+    </div></div>
+  </div>
+</div>
+
+<h2 class="h5 mt-4 mb-3">Перемещения</h2>
+<table class="table bg-white align-middle">
+  <thead class="table-dark">
+    <tr>
+      <th>#</th><th>Товар</th><th>Откуда</th><th>Куда</th>
+      <th class="text-end">Кол-во</th><th>Статус</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in transfers %}
+    <tr>
+      <td>{{ t.id }}</td>
+      <td>{{ product_names.get(t.product_id) }}</td>
+      <td>{{ loc_names.get(t.from_location_id) }}</td>
+      <td>{{ loc_names.get(t.to_location_id) }}</td>
+      <td class="text-end">{{ t.qty }}</td>
+      <td>{{ "В пути" if t.status == "IN_TRANSIT" else "Принято" }}</td>
+      <td>
+        {% if t.status == "IN_TRANSIT" %}
+        <form method="post" action="/actions/transfer/{{ t.id }}/receive">
+          <input type="hidden" name="key" value="{{ new_key }}-recv-{{ t.id }}">
+          <button class="btn btn-sm btn-outline-success">Принять</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2 class="h5 mt-4 mb-3">История операций</h2>
+<table class="table table-sm bg-white">
+  <thead>
+    <tr>
+      <th>Время</th><th>Тип</th><th>Товар</th><th>Локация</th>
+      <th class="text-end">Кол-во</th><th class="text-end">Резерв</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for e in history %}
+    <tr>
+      <td>{{ e.created_at.strftime("%d.%m %H:%M") }}</td>
+      <td>{{ e.kind }}</td>
+      <td>{{ product_names.get(e.product_id) }}</td>
+      <td>{{ loc_names.get(e.location_id) }}</td>
+      <td class="text-end">{{ e.qty_delta }}</td>
+      <td class="text-end">{{ e.reserve_delta }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
